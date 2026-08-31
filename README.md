@@ -1,7 +1,11 @@
-APKforge GitHub Pages package
+# APKforge on GitHub Pages
 
-Upload these files to the root of your GitHub Pages repository or publish the extracted folder with GitHub Pages.
+## Upload
 
-Backend API: https://apk-builder--safdarali789.replit.app
+Upload the contents of this folder to the root of your GitHub Pages repository. Do not upload the ZIP file itself. After uploading, enable Pages from **Settings → Pages**, choose your deployment branch, and choose **/ (root)**.
 
-The built frontend already contains this backend URL.
+## Backend
+
+The frontend is already configured to use:
+
+https://apk-builder--safdarali789.replit.app
