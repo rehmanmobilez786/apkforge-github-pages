@@ -1,0 +1,3 @@
+[console_scripts]
+apk-builder = apk_builder.cli:main
+apk-builder-server = apk_builder.web:main

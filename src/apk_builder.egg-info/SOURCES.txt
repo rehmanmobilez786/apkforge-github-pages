@@ -1,0 +1,17 @@
+README.md
+pyproject.toml
+src/apk_builder/__init__.py
+src/apk_builder/android_sdk.py
+src/apk_builder/builder.py
+src/apk_builder/cli.py
+src/apk_builder/git_source.py
+src/apk_builder/web.py
+src/apk_builder.egg-info/PKG-INFO
+src/apk_builder.egg-info/SOURCES.txt
+src/apk_builder.egg-info/dependency_links.txt
+src/apk_builder.egg-info/entry_points.txt
+src/apk_builder.egg-info/requires.txt
+src/apk_builder.egg-info/top_level.txt
+tests/test_builder.py
+tests/test_git_source.py
+tests/test_web.py

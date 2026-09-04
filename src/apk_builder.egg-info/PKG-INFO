@@ -1,3 +1,14 @@
+Metadata-Version: 2.4
+Name: apk-builder
+Version: 0.1.0
+Summary: A small command-line tool for building and collecting Android APKs from Gradle projects.
+Author: apk-builder contributors
+License-Expression: MIT
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: Flask==2.3.2
+Requires-Dist: Werkzeug==2.3.6
+
 # apk-builder
 
 `apk-builder` is a Python command-line tool and Flask API for building Android
