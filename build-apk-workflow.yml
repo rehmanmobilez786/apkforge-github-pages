@@ -1,0 +1,282 @@
+name: 🔨 APK Builder - Auto Build & Fix
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'android/**'
+      - 'apps/**'
+      - '.github/workflows/build-apk-workflow.yml'
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      project_path:
+        description: 'Project path (optional)'
+        required: false
+        default: ''
+      fix_errors:
+        description: 'Auto fix errors'
+        required: false
+        default: 'true'
+
+env:
+  JAVA_VERSION: '11'
+  GRADLE_VERSION: '7.6.1'
+  BUILD_TYPE: 'debug'
+
+jobs:
+  detect-projects:
+    name: 📍 Detect Android Projects
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.detect.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Detect Android Projects
+        id: detect
+        run: |
+          projects="[]"
+          
+          # Check all directories for build.gradle files
+          for dir in */ */*/; do
+            if [ -f "$dir/build.gradle" ] || [ -f "$dir/build.gradle.kts" ]; then
+              project_name=$(basename "$dir")
+              projects=$(echo "$projects" | jq --arg name "$dir" '. += [$name]')
+            fi
+          done
+          
+          echo "projects=$projects" >> $GITHUB_OUTPUT
+          echo "🔍 Detected projects: $projects"
+
+  build-apk:
+    name: 🔨 Build APK - ${{ matrix.project }}
+    needs: detect-projects
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project: ${{ fromJson(needs.detect-projects.outputs.projects) }}
+      fail-fast: false
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: 🤖 Setup Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 31
+          ndk-version: '23.1.7779620'
+
+      - name: 🔧 Make Gradlew Executable
+        run: |
+          if [ -f "${{ matrix.project }}/gradlew" ]; then
+            chmod +x "${{ matrix.project }}/gradlew"
+          fi
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+          fi
+
+      - name: 🔍 Check Project Structure
+        id: check_structure
+        run: |
+          cd "${{ matrix.project }}"
+          
+          # Check for gradle files
+          if [ ! -f "build.gradle" ] && [ ! -f "build.gradle.kts" ]; then
+            echo "❌ No build.gradle found!"
+            echo "structure_valid=false" >> $GITHUB_OUTPUT
+          else
+            echo "✅ build.gradle found"
+            echo "structure_valid=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 🧹 Auto Fix - Clean Build
+        if: steps.check_structure.outputs.structure_valid == 'true'
+        run: |
+          cd "${{ matrix.project }}"
+          if [ -f "gradlew" ]; then
+            ./gradlew clean --stacktrace || true
+          else
+            gradle clean --stacktrace || true
+          fi
+
+      - name: 🔧 Auto Fix - Dependency Resolution
+        if: steps.check_structure.outputs.structure_valid == 'true'
+        run: |
+          cd "${{ matrix.project }}"
+          
+          # Fix common Gradle issues
+          if [ -f "build.gradle.kts" ]; then
+            # Update Kotlin version if needed
+            sed -i 's/kotlin("jvm") version ".*"/kotlin("jvm") version "1.9.0"/' build.gradle.kts || true
+          fi
+
+      - name: 📦 Build Debug APK
+        id: build
+        if: steps.check_structure.outputs.structure_valid == 'true'
+        run: |
+          cd "${{ matrix.project }}"
+          
+          if [ -f "gradlew" ]; then
+            ./gradlew assembleDebug -x test --stacktrace 2>&1 | tee build.log
+            BUILD_STATUS=$?
+          else
+            gradle assembleDebug -x test --stacktrace 2>&1 | tee build.log
+            BUILD_STATUS=$?
+          fi
+          
+          if [ $BUILD_STATUS -eq 0 ]; then
+            echo "build_success=true" >> $GITHUB_OUTPUT
+            echo "✅ Build successful!"
+          else
+            echo "build_success=false" >> $GITHUB_OUTPUT
+            echo "❌ Build failed!"
+          fi
+          
+          exit $BUILD_STATUS
+
+      - name: 🐛 Auto Fix - Handle Build Errors
+        if: failure()
+        run: |
+          cd "${{ matrix.project }}"
+          
+          # Fix 1: Missing AndroidX
+          if grep -q "AndroidX" build.log; then
+            echo "Fixing AndroidX issues..."
+            sed -i 's/android.useAndroidX=false/android.useAndroidX=true/' gradle.properties || true
+            echo "android.useAndroidX=true" >> gradle.properties
+          fi
+          
+          # Fix 2: Jetifier
+          if grep -q "jetifier" build.log; then
+            echo "android.enableJetifier=true" >> gradle.properties
+          fi
+          
+          # Fix 3: Compilation errors
+          if grep -q "compilation failed" build.log; then
+            echo "⚠️ Compilation error detected - retrying..."
+          fi
+          
+          echo "Auto-fix applied. Retrying build..."
+
+      - name: 🔄 Retry Build After Fixes
+        if: failure()
+        id: retry_build
+        continue-on-error: true
+        run: |
+          cd "${{ matrix.project }}"
+          
+          if [ -f "gradlew" ]; then
+            ./gradlew clean assembleDebug -x test --stacktrace
+          else
+            gradle clean assembleDebug -x test --stacktrace
+          fi
+          
+          if [ $? -eq 0 ]; then
+            echo "retry_success=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📁 Find APK
+        id: find_apk
+        if: success() || steps.retry_build.outputs.retry_success == 'true'
+        run: |
+          cd "${{ matrix.project }}"
+          
+          APK_PATH=$(find . -name "*.apk" -type f | head -1)
+          
+          if [ -z "$APK_PATH" ]; then
+            echo "❌ APK not found!"
+            exit 1
+          fi
+          
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "✅ APK found: $APK_PATH"
+
+      - name: 📤 Upload APK Artifact
+        if: success() || steps.retry_build.outputs.retry_success == 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.project }}-debug-apk
+          path: ${{ matrix.project }}/${{ steps.find_apk.outputs.apk_path }}
+          retention-days: 30
+
+      - name: 📋 Upload Build Logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.project }}-build-logs
+          path: ${{ matrix.project }}/build.log
+          retention-days: 7
+
+      - name: ✅ Build Summary
+        if: always()
+        run: |
+          echo "## 📊 Build Summary - ${{ matrix.project }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| Project | ${{ matrix.project }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Status | $([ $? -eq 0 ] && echo '✅ Success' || echo '❌ Failed') |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Type | Debug |" >> $GITHUB_STEP_SUMMARY
+          echo "| Java | ${{ env.JAVA_VERSION }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+  create-release:
+    name: 🎉 Create Release
+    needs: build-apk
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📥 Download All Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: 🏷️ Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: artifacts/**/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📝 Release Notes
+        run: |
+          echo "## 🚀 APK Build Released" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All APKs built successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Artifacts Available:**" >> $GITHUB_STEP_SUMMARY
+          ls -la artifacts/ >> $GITHUB_STEP_SUMMARY || true
+
+  notify:
+    name: 🔔 Notification
+    needs: [build-apk]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: ✅ Success Notification
+        if: success()
+        run: |
+          echo "✅ All builds completed successfully!"
+          echo "📥 Download APK from Artifacts tab"
+
+      - name: ❌ Failure Notification
+        if: failure()
+        run: |
+          echo "❌ Build failed!"
+          echo "📋 Check logs for details"

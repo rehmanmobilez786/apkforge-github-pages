@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📱 APK Projects Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .header h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+    
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    
+    .projects-section {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .project-card {
+      background: #f9f9f9;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .project-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+    }
+    
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 15px;
+    }
+    
+    .project-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .project-status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .status-success {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-building {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-failed {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .project-details {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.8;
+      margin-bottom: 15px;
+    }
+    
+    .project-details div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    
+    .detail-label {
+      font-weight: 600;
+    }
+    
+    .project-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .btn {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-build {
+      background: #667eea;
+      color: white;
+    }
+    
+    .btn-build:hover {
+      background: #5568d3;
+    }
+    
+    .btn-download {
+      background: #00b894;
+      color: white;
+    }
+    
+    .btn-download:hover {
+      background: #00a377;
+    }
+    
+    .btn-settings {
+      background: #f0f0f0;
+      color: #333;
+    }
+    
+    .btn-settings:hover {
+      background: #e0e0e0;
+    }
+    
+    .add-project {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      margin-bottom: 30px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: Arial;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .form-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.show {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    
+    .modal-header {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    
+    .close-modal {
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #999;
+    }
+    
+    .close-modal:hover {
+      color: #333;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+    
+    @media (max-width: 600px) {
+      .project-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>📱 APK Projects Dashboard</h1>
+      <p>GitHub Actions سے Automated APK Build Management</p>
+      
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-number" id="totalProjects">0</div>
+          <div class="stat-label">کل Projects</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="successBuilds">0</div>
+          <div class="stat-label">کامیاب Builds</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="failedBuilds">0</div>
+          <div class="stat-label">ناکام Builds</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="totalAPKs">0</div>
+          <div class="stat-label">Total APKs</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Add Project -->
+    <div class="add-project">
+      <div class="section-title">➕ نیا Project شامل کریں</div>
+      
+      <div class="form-group">
+        <label>Project Name:</label>
+        <input type="text" id="projectName" placeholder="مثال: SafeKid View">
+      </div>
+      
+      <div class="form-group">
+        <label>Project Path:</label>
+        <input type="text" id="projectPath" placeholder="مثال: android/safekid-view">
+      </div>
+      
+      <div class="form-group">
+        <label>GitHub Repository URL:</label>
+        <input type="text" id="repoUrl" placeholder="https://github.com/username/repo">
+      </div>
+      
+      <div class="form-group">
+        <label>Description:</label>
+        <textarea id="description" placeholder="Project کی تفصیل..." rows="3"></textarea>
+      </div>
+      
+      <div class="form-actions">
+        <button class="btn btn-build" onclick="addProject()">➕ Project شامل کریں</button>
+        <button class="btn btn-settings" onclick="loadFromGitHub()">🔄 GitHub سے Load کریں</button>
+      </div>
+    </div>
+    
+    <!-- Projects List -->
+    <div class="projects-section">
+      <div class="section-title">📦 Active Projects</div>
+      <div class="project-grid" id="projectsGrid">
+        <!-- Projects will be loaded here -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Project Modal -->
+  <div class="modal" id="projectModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeModal()">&times;</span>
+      <div class="modal-header">📊 Project Details</div>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <script>
+    // Sample projects data
+    let projects = JSON.parse(localStorage.getItem('apkProjects')) || [];
+    
+    // Initialize
+    loadProjects();
+    updateStats();
+    
+    function loadProjects() {
+      const grid = document.getElementById('projectsGrid');
+      
+      if (projects.length === 0) {
+        grid.innerHTML = '<p style="color: #999;">کوئی projects نہیں ملے</p>';
+        return;
+      }
+      
+      grid.innerHTML = projects.map((project, index) => `
+        <div class="project-card">
+          <div class="project-header">
+            <div class="project-name">${project.name}</div>
+            <div class="project-status status-${project.status}">${project.status}</div>
+          </div>
+          
+          <div class="project-details">
+            <div>
+              <span class="detail-label">Path:</span>
+              <span>${project.path}</span>
+            </div>
+            <div>
+              <span class="detail-label">Last Build:</span>
+              <span>${project.lastBuild || 'N/A'}</span>
+            </div>
+            <div>
+              <span class="detail-label">APKs:</span>
+              <span>${project.apkCount || 0}</span>
+            </div>
+          </div>
+          
+          <div class="project-actions">
+            <button class="btn btn-build" onclick="triggerBuild(${index})">🔨 Build</button>
+            <button class="btn btn-download" onclick="downloadAPK(${index})">📥 Download</button>
+            <button class="btn btn-settings" onclick="editProject(${index})">⚙️ Edit</button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function addProject() {
+      const name = document.getElementById('projectName').value;
+      const path = document.getElementById('projectPath').value;
+      const repo = document.getElementById('repoUrl').value;
+      const desc = document.getElementById('description').value;
+      
+      if (!name || !path) {
+        alert('❌ نام اور path ضروری ہیں');
+        return;
+      }
+      
+      const newProject = {
+        name,
+        path,
+        repo,
+        description: desc,
+        status: 'pending',
+        lastBuild: new Date().toLocaleString('ur-PK'),
+        apkCount: 0,
+        builds: []
+      };
+      
+      projects.push(newProject);
+      saveProjects();
+      loadProjects();
+      updateStats();
+      
+      // Clear form
+      document.getElementById('projectName').value = '';
+      document.getElementById('projectPath').value = '';
+      document.getElementById('repoUrl').value = '';
+      document.getElementById('description').value = '';
+      
+      alert('✅ Project شامل ہو گیا!');
+    }
+    
+    function triggerBuild(index) {
+      projects[index].status = 'building';
+      projects[index].lastBuild = new Date().toLocaleString('ur-PK');
+      
+      // Simulate build
+      setTimeout(() => {
+        projects[index].status = 'success';
+        projects[index].apkCount = (projects[index].apkCount || 0) + 1;
+        saveProjects();
+        loadProjects();
+        updateStats();
+        alert('✅ Build مکمل ہو گیا!');
+      }, 2000);
+      
+      saveProjects();
+      loadProjects();
+      updateStats();
+    }
+    
+    function downloadAPK(index) {
+      const project = projects[index];
+      
+      if (project.apkCount === 0) {
+        alert('❌ کوئی APK دستیاب نہیں');
+        return;
+      }
+      
+      alert(`✅ APK download ہو رہی ہے: ${project.name}.apk`);
+      // In real scenario, this would redirect to GitHub Artifacts
+    }
+    
+    function editProject(index) {
+      const project = projects[index];
+      const modal = document.getElementById('projectModal');
+      
+      modal.querySelector('#modalContent').innerHTML = `
+        <div class="form-group">
+          <label>Project Name:</label>
+          <input type="text" value="${project.name}" id="editName">
+        </div>
+        <div class="form-group">
+          <label>Path:</label>
+          <input type="text" value="${project.path}" id="editPath">
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-build" onclick="saveEdit(${index})">💾 Save</button>
+          <button class="btn btn-settings" onclick="deleteProject(${index})">🗑️ Delete</button>
+        </div>
+      `;
+      
+      modal.classList.add('show');
+    }
+    
+    function saveEdit(index) {
+      projects[index].name = document.getElementById('editName').value;
+      projects[index].path = document.getElementById('editPath').value;
+      
+      saveProjects();
+      loadProjects();
+      closeModal();
+      alert('✅ Project update ہو گیا!');
+    }
+    
+    function deleteProject(index) {
+      if (confirm('کیا واقعی delete کریں گے؟')) {
+        projects.splice(index, 1);
+        saveProjects();
+        loadProjects();
+        updateStats();
+        closeModal();
+        alert('✅ Project delete ہو گیا!');
+      }
+    }
+    
+    function closeModal() {
+      document.getElementById('projectModal').classList.remove('show');
+    }
+    
+    function saveProjects() {
+      localStorage.setItem('apkProjects', JSON.stringify(projects));
+    }
+    
+    function updateStats() {
+      document.getElementById('totalProjects').textContent = projects.length;
+      document.getElementById('successBuilds').textContent = 
+        projects.filter(p => p.status === 'success').length;
+      document.getElementById('failedBuilds').textContent = 
+        projects.filter(p => p.status === 'failed').length;
+      document.getElementById('totalAPKs').textContent = 
+        projects.reduce((sum, p) => sum + (p.apkCount || 0), 0);
+    }
+    
+    function loadFromGitHub() {
+      alert('🔄 GitHub سے projects load کریں:\n\n1. GitHub API token درکار ہے\n2. Repositories scan کریں\n3. Android projects detect کریں');
+    }
+  </script>
+</body>
+</html>
