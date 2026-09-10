@@ -1,0 +1,20 @@
+# Build
+build/
+.gradle/
+*.apk
+*.aar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Local
+local.properties
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Keep workflows
+!.github/workflows/
