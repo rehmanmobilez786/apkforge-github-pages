@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/android-source-starter/"
+title = "Android Source Starter"
+description = "A reusable Android source-code starter app with polished navigation, sample screens, local persistence, settings, and GitHub-ready APK build configuration."
+version = "1.0.0"
+id = "artifacts/android-source-starter"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/android-source-starter/" ]
+localPort = 20983
+
+[services.development]
+run = "pnpm --filter @workspace/android-source-starter run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/android-source-starter", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/android-source-starter", "run", "serve" ]
+
+[services.env]
+PORT = "20983"
+BASE_PATH = "/android-source-starter/"

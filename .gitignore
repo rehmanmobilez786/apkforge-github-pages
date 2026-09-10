@@ -1,20 +1,41 @@
-# Build
-build/
-.gradle/
-*.apk
-*.aar
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# IDE
-.idea/
-.vscode/
-*.iml
+# dependencies
+node_modules/
 
-# Local
-local.properties
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
 
-# OS
+# Native
+ios/
+android/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
 .DS_Store
-Thumbs.db
+*.pem
 
-# Keep workflows
-!.github/workflows/
+# local env files
+.env*.local
+
+# typescript
+*.tsbuildinfo
+.vercel
+
+.env
